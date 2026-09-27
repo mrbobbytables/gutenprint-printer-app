@@ -183,11 +183,11 @@ expect_rejected_setting() {
 # Web administration knobs (ChairLift ADR-0016). Malformed or unsupported
 # values fail closed instead of starting an unauthenticated web admin.
 expect_rejected_setting 64 "unsupported option 'no-tls'" -e PRINTER_APP_SERVER_OPTIONS=no-web-interface,no-tls
-# The shared printing base builds PAPPL without PAM and ships no /etc/pam.d, so
-# an auth service cannot authenticate anyone in this image; refuse it rather
-# than lock every administrator out with 401.
-podman run --rm --entrypoint /usr/bin/bash "$image" -c 'test ! -e /etc/pam.d/chairlift-printer'
-expect_rejected_setting 78 'names a PAM service this image does not ship' -e PRINTER_APP_AUTH_SERVICE=chairlift-printer
+# The shared printing base builds PAPPL without PAM, so an auth service cannot
+# authenticate anyone in this image; refuse it outright rather than lock every
+# administrator out with 401.
+expect_rejected_setting 78 'set PRINTER_APP_SERVER_OPTIONS=no-web-interface to disable web administration instead' -e PRINTER_APP_AUTH_SERVICE=chairlift-printer
+expect_rejected_setting 78 'set PRINTER_APP_SERVER_OPTIONS=no-web-interface to disable web administration instead' -e PRINTER_APP_AUTH_SERVICE=cups
 expect_rejected_setting 78 'PRINTER_APP_ADMIN_GROUP requires PRINTER_APP_AUTH_SERVICE' -e PRINTER_APP_ADMIN_GROUP=nonroot
 
 # With the web interface disabled, every admin page is gone while IPP keeps

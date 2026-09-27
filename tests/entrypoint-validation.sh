@@ -48,7 +48,8 @@ expect_rejection 64 'PRINTER_APP_AUTH_SERVICE must be a PAM service name' PRINTE
 expect_rejection 64 'PRINTER_APP_ADMIN_GROUP must be a group name' PRINTER_APP_ADMIN_GROUP='bad;group'
 expect_rejection 64 'PRINTER_APP_ADMIN_GROUP must be a group name' PRINTER_APP_ADMIN_GROUP='1admins'
 expect_rejection 78 'PRINTER_APP_ADMIN_GROUP requires PRINTER_APP_AUTH_SERVICE' PRINTER_APP_ADMIN_GROUP=wheel
-expect_rejection 78 'names a PAM service this image does not ship' PRINTER_APP_AUTH_SERVICE=nonexistent-pam-service
+expect_rejection 78 'set PRINTER_APP_SERVER_OPTIONS=no-web-interface to disable web administration instead' PRINTER_APP_AUTH_SERVICE=nonexistent-pam-service
+expect_rejection 78 'set PRINTER_APP_SERVER_OPTIONS=no-web-interface to disable web administration instead' PRINTER_APP_AUTH_SERVICE=cups
 
 if ((failures > 0)); then
   printf 'FAIL: %d entrypoint validation case(s) did not fail closed\n' "$failures" >&2

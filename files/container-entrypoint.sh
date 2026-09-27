@@ -54,14 +54,13 @@ if [[ -n "${PRINTER_APP_ADMIN_GROUP:-}" ]]; then
     || usage_error 'PRINTER_APP_ADMIN_GROUP must be a group name: letters, digits, "_", "." or "-", starting with a letter or "_"'
 fi
 
-# A PAM service name is a file under /etc/pam.d. The shared printing base builds
-# PAPPL with --disable-libpam and ships no PAM stack, so today no service can
-# satisfy this check and no-web-interface is the only supported way to close
-# the web admin surface. Forwarding the option anyway would lock every
-# administrator out with 401 rather than authenticate anyone.
+# While the shared printing base builds PAPPL with --disable-libpam, PAPPL
+# cannot authenticate users via PAM and forwarding an auth service locks every
+# administrator out with 401. Refuse PRINTER_APP_AUTH_SERVICE outright with
+# exit 78; set PRINTER_APP_SERVER_OPTIONS=no-web-interface to disable web
+# administration instead.
 if [[ -n "${PRINTER_APP_AUTH_SERVICE:-}" ]]; then
-  [[ -f "/etc/pam.d/$PRINTER_APP_AUTH_SERVICE" ]] \
-    || config_error "PRINTER_APP_AUTH_SERVICE=${PRINTER_APP_AUTH_SERVICE} names a PAM service this image does not ship (/etc/pam.d/${PRINTER_APP_AUTH_SERVICE} is missing); set PRINTER_APP_SERVER_OPTIONS=no-web-interface to disable web administration instead"
+  config_error "PRINTER_APP_AUTH_SERVICE=${PRINTER_APP_AUTH_SERVICE} cannot be honoured (PAPPL is built without PAM); set PRINTER_APP_SERVER_OPTIONS=no-web-interface to disable web administration instead"
 fi
 
 # admin-group only restricts who may administer once auth-service authenticates
