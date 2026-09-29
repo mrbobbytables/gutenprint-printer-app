@@ -99,7 +99,7 @@ podman run -d \
   -v "$state_dir:/var/lib/gutenprint-printer-app:Z" "$image" >/dev/null
 wait_for_http "$port"
 curl --fail --silent --show-error --insecure "https://127.0.0.1:${port}/" | grep -q '<title>Gutenprint Printer Application</title>'
-podman logs "$name" 2>&1 | grep -q 'NOTICE: web administration is reachable'
+grep -q 'NOTICE: web administration is reachable' <<< "$(podman logs "$name" 2>&1)"
 podman unshare test -s "$state_dir/cups/snmp.conf"
 podman unshare test -s "$state_dir/usb/net.sf.gimp-print.usb-quirks"
 podman unshare test -s "$state_dir/usb/org.cups.usb-quirks"
@@ -216,7 +216,7 @@ if [[ "$ready" -ne 1 ]]; then
   printf 'FAIL: listener did not answer (with 404) after starting with no-web-interface\n' >&2
   exit 1
 fi
-if podman logs "$no_web_name" 2>&1 | grep -q 'NOTICE: web administration is reachable'; then
+if grep -q 'NOTICE: web administration is reachable' <<< "$(podman logs "$no_web_name" 2>&1)"; then
   printf 'FAIL: entrypoint warned about reachable web administration although it was disabled\n' >&2
   exit 1
 fi
