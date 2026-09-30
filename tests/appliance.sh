@@ -98,7 +98,7 @@ podman run -d \
   --name "$name" --network host -e PORT="$port" \
   -v "$state_dir:/var/lib/gutenprint-printer-app:Z" "$image" >/dev/null
 wait_for_http "$port"
-curl --fail --silent --show-error --insecure "https://127.0.0.1:${port}/" | grep -q '<title>Gutenprint Printer Application</title>'
+grep -q '<title>Gutenprint Printer Application</title>' <<< "$(curl --fail --silent --show-error --insecure "https://127.0.0.1:${port}/")"
 grep -q 'NOTICE: web administration is reachable' <<< "$(podman logs "$name" 2>&1)"
 podman unshare test -s "$state_dir/cups/snmp.conf"
 podman unshare test -s "$state_dir/usb/net.sf.gimp-print.usb-quirks"
@@ -154,7 +154,7 @@ podman run --name "$invalid_name" -e PORT=invalid "$image" >/dev/null 2>&1
 invalid_status=$?
 set -e
 [[ "$invalid_status" -eq 64 ]]
-podman logs "$invalid_name" 2>&1 | grep -q 'PORT must be numeric'
+grep -q 'PORT must be numeric' <<< "$(podman logs "$invalid_name" 2>&1)"
 
 http_status() {
   local scheme="$1" target_port="$2" path="$3"
@@ -220,7 +220,8 @@ if grep -q 'NOTICE: web administration is reachable' <<< "$(podman logs "$no_web
   printf 'FAIL: entrypoint warned about reachable web administration although it was disabled\n' >&2
   exit 1
 fi
-no_web_driver="$(podman exec "$no_web_name" gutenprint-printer-app -u "$no_web_system_uri" drivers | awk '/"Epson Stylus Photo R1800 \(en\)"/ { gsub(/"/, "", $1); print $1; exit }')"
+no_web_drivers="$(podman exec "$no_web_name" gutenprint-printer-app -u "$no_web_system_uri" drivers)"
+no_web_driver="$(awk '/"Epson Stylus Photo R1800 \(en\)"/ { gsub(/"/, "", $1); print $1; exit }' <<< "$no_web_drivers")"
 [[ -n "$no_web_driver" ]] || { printf 'FAIL: could not find expert Epson Stylus Photo R1800 driver\n' >&2; exit 1; }
 podman exec "$no_web_name" gutenprint-printer-app \
   -u "$no_web_system_uri" \
@@ -269,6 +270,6 @@ podman run --name "$symlink_name" -e PORT="$port" \
 symlink_status=$?
 set -e
 [[ "$symlink_status" -eq 1 ]]
-podman logs "$symlink_name" 2>&1 | grep -q 'spool must not be a symlink'
+grep -q 'spool must not be a symlink' <<< "$(podman logs "$symlink_name" 2>&1)"
 [[ "$(podman unshare stat -c %a "$symlink_dir/outside")" == 755 ]]
 printf 'OK: native nonroot Gutenprint payload, HTTPS, owner-only persistent state and supervised lifecycle\n'
